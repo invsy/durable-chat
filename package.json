@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "wrangler dev",
+    "dev": "wrangler dev",
     "deploy": "wrangler deploy"
   },
   "keywords": [],
@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "eventsource-parser": "^2.0.1",
+    "invsy": "^1.0.18",
     "nanoid": "^5.0.7",
     "partyserver": "^0.0.51",
     "partysocket": "^1.0.2",

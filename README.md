@@ -1,10 +1,12 @@
-Durable Chats
+Durable Chats with Invsy
 
 ---
 
-An example of building a chat app, with Durable Objects. As a bonus, this also uses Cloudflare's AI bindings to repond to messages.
+An example of building a chat app with message storage via Invsy, with Durable Objects. As a bonus, this also uses Cloudflare's AI bindings to respond to messages.
 
-`npm start` to run locally.
+Copy `.dev.vars.example` to `.dev.vars` and fill in the values. You can get your project ID and secret key from the [Invsy dashboard](https://invsy.com).
+
+`npm dev` to run locally.
 
 `npm run deploy` to deploy to Cloudflare Workers.
 

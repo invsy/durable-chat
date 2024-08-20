@@ -8,14 +8,18 @@ import {
 import { nanoid } from "nanoid";
 import { EventSourceParserStream } from "eventsource-parser/stream";
 
-import type { ChatMessage, Message } from "../shared";
+import {type ChatMessage, type Message, userId} from "../shared";
+import {invsy} from "../invsy-client";
 
-type Env = {
+export type Env = {
   Ai: Ai;
+  INVSY_API_KEY: string;
+  INVSY_PROJECT_ID: string;
 };
 
 export class Chat extends Server<Env> {
   messages = [] as ChatMessage[];
+  chatId = ''
 
   sendMessage(connection: Connection, message: Message) {
     connection.send(JSON.stringify(message));
@@ -26,11 +30,31 @@ export class Chat extends Server<Env> {
   }
 
   async onConnect(connection: Connection, ctx: ConnectionContext) {
+    // Convert the request URL to a URL object
+    const url = new URL(ctx.request.url);
+
+    // get the chat id after chat/ and remove the search params e.g. /parties/chat/df7968b702668a6d1f2a51be8c66e25d?test=woop
+    const chatId = url.pathname.split("/").pop()?.split("?")[0];
+
+    if (chatId) {
+      this.chatId = chatId
+      // Fetch the messages from the database
+      const { messages } = await invsy(this.env).get(chatId);
+
+      console.log(messages)
+
+      if (messages) {
+        this.messages = messages;
+      }
+    }
+
+    // Send the messages to the connected client
     this.sendMessage(connection, {
       type: "all",
       messages: this.messages,
     });
   }
+
 
   async onMessage(connection: Connection, message: WSMessage) {
     // let's broadcast the raw message to everyone else
@@ -100,6 +124,21 @@ export class Chat extends Server<Env> {
             return m;
           });
 
+          try {
+            const res = await invsy(this.env).save({
+              id: this.chatId,
+              user_id: userId,
+              messages: this.messages,
+              meta: {
+                title: 'woop the title was updated',
+              }
+            })
+
+            console.log('res', res)
+          } catch (e) {
+            console.error(e)
+          }
+
           // let's update the message with the final response
           this.broadcastMessage({
             type: "update",
@@ -118,9 +157,26 @@ export class Chat extends Server<Env> {
 
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url);
+
+    if (url.pathname === "/new") {
+      const { id } = await invsy(env).new({
+        title: 'This is a new chat'
+      });
+
+      // Redirect to /?id=${id}
+      return new Response(null, {
+        status: 302,
+        headers: {
+          location: `${url.href.replace(`/new`, '')}/?id=${id}`,
+        },
+      });
+    }
+
     return (
-      (await routePartykitRequest(request, env)) ||
-      new Response("Not Found", { status: 404 })
+        (await routePartykitRequest(request, env)) ||
+        new Response("Not Found", { status: 404 })
     );
   },
 } satisfies ExportedHandler<Env>;
+

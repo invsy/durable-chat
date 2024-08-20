@@ -9,9 +9,20 @@ function App() {
   const [name] = useState(names[Math.floor(Math.random() * names.length)]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
+    const pathname = window.location.pathname;
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id') || '';
+
+    console.log(id); // This will log '123' if the URL is ?id=123
+
+  if(pathname === '/' && !id) {
+    window.location.pathname = '/new';
+  }
+
+
   const socket = usePartySocket({
     party: "chat",
-    room: "general",
+    room: id,
     onMessage: (evt) => {
       const message = JSON.parse(evt.data) as Message;
       switch (message.type) {

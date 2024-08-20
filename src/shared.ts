@@ -1,3 +1,5 @@
+export const userId = 'user123'
+
 export type ChatMessage = {
   id: string;
   content: string;
